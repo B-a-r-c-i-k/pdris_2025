@@ -15,10 +15,8 @@ cd $DIR_NAME
 git checkout $BRANCH1
 git checkout $BRANCH2
 
-echo "pwd $PWD"
-
 git branch
 
-git diff $BRANCH1 $BRANCH2 --name-status
+git diff $BRANCH1 $BRANCH2 --name-status > ../diff_report_${BRANCH1}_vs_${BRANCH2}.txt
 
 
