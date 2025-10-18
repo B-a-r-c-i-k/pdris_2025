@@ -1,7 +1,6 @@
 #!/bin/bash
 
 system_report() {
-	timestamp=$(date +"%Y-%m-%d_%H-%M-%S")
 	date_only=$(date +"%Y-%m-%d")
 
 	filename="system_report_${date_only}.csv"
@@ -13,9 +12,11 @@ system_report() {
 		if [[ ! -f "system_report_${current_date_only}.csv" ]] 
 		then
 			date_only="$current_date_only"
-			timestamp=$(date +"%Y-%m-%d_%H-%M-%S")
+			# timestamp=$(date +"%Y-%m-%d_%H-%M-%S")
 			filename="system_report_${date_only}.csv"
+			echo "timestamp;all_memory;free_memory;memory_used%;cpu_used%;disk_used%;load_average_1m" > "$filename"
 		fi
+		timestamp=$(date +"%Y-%m-%d_%H-%M-%S")
 		all_memory=$(free -h | grep Mem | awk '{print $2}')
 		free_memory=$(free -h | grep Mem | awk '{print $4}')
 		percent_usage_memory=$(free -h | grep Mem | awk '{print ($3/$2)*100}')
@@ -29,7 +30,7 @@ system_report() {
 
 if [[ $1 == "START" ]] 
 then
-	if [[ $(pgrep -f "./script.sh START" | wc -l) > 2  ]]
+	if [[ $(pgrep -f "./script2.sh START" | wc -l) > 2  ]]
 	then
 		echo "Already started"
 	else
@@ -38,7 +39,7 @@ then
 	fi
 elif [[ $1 == "STATUS" ]]
 then
-	if [[ $(pgrep -f "./script.sh START") ]]
+	if [[ $(pgrep -f "./script2.sh START") ]]
 	then
 		echo "Executing"
 	else
@@ -46,7 +47,7 @@ then
 	fi
 elif [[ $1 == "STOP" ]]
 then
-	kill $(pgrep -f "./script.sh START")
+	kill $(pgrep -f "./script2.sh START")
 	echo "Stopped"
 else
 	echo "Wrong command"
