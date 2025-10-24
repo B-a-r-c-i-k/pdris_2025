@@ -1,0 +1,2 @@
+[group_server1]
+    server_1 ansible_host=172.17.0.2 ansible_ssh_user=userxd ansible_ssh_pass=root 
