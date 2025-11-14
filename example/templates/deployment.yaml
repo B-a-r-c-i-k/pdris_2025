@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: python-project-deployment
+  labels:
+    app: python-project
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: python-project
+  template:
+    metadata:
+      labels:
+        app: python-project
+    spec:
+      containers:
+      - name: python-project
+        image: barcikwhyme/lab3-python-project-env
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 5000
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 5000
+          initialDelaySeconds: 10
+          periodSeconds: 5
+        env:
+          - name: MYSQL_SERVICE_HOST
+            value: mysql-service
