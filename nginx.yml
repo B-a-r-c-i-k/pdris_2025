@@ -1,0 +1,11 @@
+- hosts: group_server1
+  become: yes
+  remote_user: userxd
+  tasks:
+    - name: Install Nginx
+      apt:
+        name: nginx
+        state: present
+        update_cache: yes
+
+
