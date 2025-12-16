@@ -1,0 +1,89 @@
+pipeline {
+    agent any
+    options {
+        timestamps()
+    }
+    environment {
+        GOROOT = "${JENKINS_HOME}/go"
+        GOPATH = "${GOROOT}/bin"
+        PATH = "${GOPATH}:${env.PATH}"
+        SONAR_TOKEN = credentials('sonar-token-id')
+    }
+    stages {
+        stage ("Clean") {
+            steps {
+                cleanWs()
+            }
+        }
+        stage('Clone') {
+            steps {
+                sh 'git clone -b materials_for_hw5 https://github.com/B-a-r-c-i-k/pdris_2025.git .'
+            }
+        }
+        stage('Install Go') {
+            steps {
+                script {
+                    sh 'curl -Ok https://dl.google.com/go/go1.23.4.linux-amd64.tar.gz'
+                    sh 'tar -C $JENKINS_HOME -xf go1.23.4.linux-amd64.tar.gz'
+                    sh 'GOPATH=$JENKINS_HOME/go/bin PATH=$PATH:$GOPATH go version'
+                }
+            }
+        }
+        stage('Build') {
+            steps {
+                sh 'GOPATH=$JENKINS_HOME/go/bin PATH=$PATH:$GOPATH go mod init tmp'
+            }
+        }
+        stage('Test') {
+            steps {
+                sh 'go install github.com/jstemmer/go-junit-report/v2@latest'
+                sh 'mkdir allure'
+                sh 'go test -v ./mymath | $JENKINS_HOME/go/bin/go-junit-report > allure/report.xml'
+                allure([
+                        includeProperties: false,
+                        jdk: '',
+                        properties: [],
+                        reportBuildPolicy: 'ALWAYS',
+                        results: [[path: 'allure']]
+                ])
+            }
+        }
+        stage('SonarQube Analysis') {
+            steps {
+                script {
+                    def scannerHome = tool name: 'sonar';
+                    withSonarQubeEnv('My SonarQube Server') { 
+                        sh "${scannerHome}/bin/sonar-scanner -Dsonar.login=$SONAR_TOKEN -Dsonar.projectKey=mymath-go -Dsonar.projectName='MyMath Go' -Dsonar.sources=./mymath"
+                    }
+                }
+            }
+        }
+        stage('Build and Package') {
+            steps {
+                script {
+                    sh 'mkdir -p build'
+                    sh 'go build -o build/mymath ./mymath'
+                    sh 'tar -cvf build/mymath-1.0.0.tar build/mymath'
+                    sh 'tar -tf build/mymath-1.0.0.tar'
+                }
+            }
+        }
+        stage('Deploy to Nexus') {
+            steps {
+                script {
+                    def nexusUrl = 'http://nexus:8081/repository/go-artifacts/'
+                    def nexusUser = 'admin'
+                    def nexusPassword = 'admin'
+                    def artifactPath = 'build/mymath-1.0.0.tar'
+                    def artifactName = 'mymath-1.0.0.tar'
+
+                    sh """
+                    curl -v -u ${nexusUser}:${nexusPassword} \
+                    --upload-file ${artifactPath} \
+                    ${nexusUrl}${artifactName}
+                    """
+                }
+            }
+        }
+    }
+}
