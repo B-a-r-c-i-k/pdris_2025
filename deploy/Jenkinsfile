@@ -1,0 +1,40 @@
+pipeline {
+    agent any
+    options {
+        timestamps()
+    }
+    environment {
+        NEXUS_URL = "http://nexus:8081"
+        ARTIFACT_PATH = "go-artifacts/mymath-1.0.0.tar"
+        ARTIFACT_FILE = "mymath-1.0.0.tar"
+    }
+
+    stages {
+        stage ("Clean") {
+            steps {
+                cleanWs()
+            }
+        }
+        stage('Git clone ansible') {
+            steps {
+                sh 'git clone -b materials_for_hw5 https://github.com/B-a-r-c-i-k/pdris_2025.git .'
+            }
+        }
+
+        stage('Download from Nexus') {
+            steps {
+                script {
+                    sh "curl -o ${ARTIFACT_FILE} ${NEXUS_URL}/repository/${ARTIFACT_PATH}"
+
+                    sh "ls"
+                }
+            }
+        }
+
+        stage('Run ansible') {
+            steps {
+                echo "deploy feat ansible"
+            }
+        }
+    }
+}
