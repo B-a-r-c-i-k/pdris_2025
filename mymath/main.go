@@ -1,4 +1,4 @@
-package main
+package mymath
 
 func IntMin(a, b int) int {
 	if a < b {
